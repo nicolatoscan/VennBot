@@ -8,7 +8,24 @@ namespace VennBot
 {
     public static class VennSolver
     {
-        public static IEnumerable<int> Solve(string formula, IEnumerable<int> omega, Dictionary<char, IEnumerable<int>> sets) {
+        public static string Solve(string formula, IEnumerable<int> omega, Dictionary<char, IEnumerable<int>> sets) {
+            formula = formula.Replace(" ", "");
+
+            if (formula.IndexOf("=") != -1) {
+                var sx = Solve_Rec(formula.Split('=')[0], omega, sets).OrderBy(n => n);
+                var dx = Solve_Rec(formula.Split('=')[1], omega, sets).OrderBy(n => n);
+                if (sx.SequenceEqual(dx))
+                    return $"{String.Join(" ", sx)} == {String.Join(" ", dx)}";
+                else 
+                    return $"{String.Join(" ", sx)} != {String.Join(" ", dx)}";
+            } else {
+                return String.Join(" ", Solve_Rec(formula, omega, sets).OrderBy(n => n));
+            }
+
+
+        }
+
+        private static IEnumerable<int> Solve_Rec(string formula, IEnumerable<int> omega, Dictionary<char, IEnumerable<int>> sets) {
 
             int i = 0;
             IEnumerable<int> prev = GetNextSet(formula, omega, sets, ref i);
@@ -39,9 +56,11 @@ namespace VennBot
         private static IEnumerable<int> GetNextSet(string formula, IEnumerable<int> omega, Dictionary<char, IEnumerable<int>> sets, ref int i) {
             IEnumerable<int> res;
             if (formula[i] == '(') {
-                res = Solve(BracketsSubFormula(formula, ref i), omega, sets);
-            } else if (formula[i] == '0') {
+                res = Solve_Rec(BracketsSubFormula(formula, ref i), omega, sets);
+            } else if (formula[i] == 'O') {
                 res = omega;
+            } else if (formula[i] == 'o') {
+                res = new List<int>();
             } else {
                 res = sets[formula[i]];
             }
@@ -69,7 +88,7 @@ namespace VennBot
             } while (depth != 0);
             i--;
             return formula.Substring(start + 1, i - start - 1);
-        } 
+        }
 
         private enum EOperator
         {
